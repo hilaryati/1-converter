@@ -8,11 +8,17 @@ import (
 	"strings"
 )
 
-// поддерживаемые валюты и курсы к "базовой" валюте (например, RUB)
-var rates = map[string]float64{
-	"RUB": 1,
-	"USD": 76,
-	"EUR": 90,
+// Структура для информации о валюте
+type CurrencyInfo struct {
+	Rate float64
+	Name string
+}
+
+// Все данные о валютах в одной map (ключ - валюта, значение - курс и название)
+var currencies = map[string]CurrencyInfo{
+	"RUB": {1.0, "Рубли"},
+	"USD": {76.0, "Доллары США"},
+	"EUR": {90.0, "Евро"},
 }
 
 // Функция для чтения строки из stdin
@@ -29,7 +35,7 @@ func readCurrency(prompt string) string {
 		fmt.Println("Доступные валюты:", strings.Join(getCurrencies(), ", "))
 		input := strings.ToUpper(readInput(prompt))
 
-		if _, ok := rates[input]; ok {
+		if _, ok := currencies[input]; ok {
 			return input
 		}
 
@@ -39,8 +45,8 @@ func readCurrency(prompt string) string {
 
 // Возвращает список доступных валют для подсказки
 func getCurrencies() []string {
-	result := make([]string, 0, len(rates))
-	for k := range rates {
+	result := make([]string, 0, len(currencies))
+	for k := range currencies {
 		result = append(result, k)
 	}
 	return result
@@ -61,15 +67,14 @@ func readAmount(prompt string) float64 {
 		}
 		return value
 	}
-
 }
 
 // Функция расчёта: конвертация через базовую валюту (RUB)
 func calculate(amount float64, from string, to string) float64 {
-	fromRate := rates[from]
-	toRate := rates[to]
+	fromRate := currencies[from].Rate
+	toRate := currencies[to].Rate
 
-	// сначала переводим в базовую (RUB), потом в целевую
+	// Сначала переводим в базовую (RUB), потом в целевую
 	amountInBase := amount * fromRate
 	result := amountInBase / toRate
 	return result
@@ -87,7 +92,9 @@ func main() {
 	// Шаг 3: ввод целевой валюты
 	to := readCurrency("Введите целевую валюту: ")
 
-	// Расчёт и вывод результата
+	// Расчёт и вывод результата с названиями валют
 	result := calculate(amount, from, to)
-	fmt.Printf("Результат: %.2f %s из %.2f %s\n", result, to, amount, from)
+	fmt.Printf("%.2f %s (%s) = %.2f %s (%s)\n",
+		amount, from, currencies[from].Name,
+		result, to, currencies[to].Name)
 }
